@@ -1,276 +1,369 @@
-# /*
-
-# GOOGLE APPS SCRIPT API URL
-
-*/
-
 const API_URL =
-"https://script.google.com/macros/s/AKfycbxwkmXBoS1BJLqQwB3M1GvjjW9Dmc2JEGyK2PqFc1_NmJZ3b2N_9isAC7AKo9V7D5DWmw/exec";
+  "YOUR_APPS_SCRIPT_URL";
 
-# /*
-
-# LOCAL DATA
-
-*/
 
 let records = [];
 
-let editMode = false;
+let editing = false;
 
-# /*
 
-# LOAD RECORDS
-
-*/
+/* =====================================
+   LOAD RECORDS
+===================================== */
 
 async function loadRecords() {
 
-try {
+  try {
 
-```
-document.getElementById(
-  "tableBody"
-).innerHTML = `
-  <tr>
-    <td colspan="7" class="loading">
-      Loading records...
-    </td>
-  </tr>
-`;
+    const response =
+      await fetch(
+        API_URL + "?action=getRecords"
+      );
 
+    const result =
+      await response.json();
 
-const response =
-  await fetch(
-    API_URL + "?action=getRecords"
-  );
+    if (!result.success) {
 
+      throw new Error(
+        result.message
+      );
 
-if (!response.ok) {
+    }
 
-  throw new Error(
-    "API request failed: " +
-    response.status
-  );
+    records =
+      result.data || [];
 
-}
+    displayRecords(records);
 
+  }
 
-const result =
-  await response.json();
+  catch (error) {
 
+    console.error(error);
 
-if (!result.success) {
+    showMessage(
+      "Error loading records: " +
+      error.message,
+      "error"
+    );
 
-  throw new Error(
-    result.message ||
-    "Unable to load records."
-  );
+  }
 
 }
 
 
-records =
-  result.data || [];
-
-
-displayRecords(records);
-```
-
-}
-
-catch (error) {
-
-```
-console.error(error);
-
-document.getElementById(
-  "tableBody"
-).innerHTML = `
-  <tr>
-    <td colspan="7" class="loading">
-      Error loading records.
-    </td>
-  </tr>
-`;
-
-showMessage(
-  error.message,
-  "error"
-);
-```
-
-}
-
-}
-
-# /*
-
-# DISPLAY RECORDS
-
-*/
+/* =====================================
+   DISPLAY RECORDS
+===================================== */
 
 function displayRecords(data) {
 
-const tableBody =
-document.getElementById(
-"tableBody"
-);
-
-const recordCount =
-document.getElementById(
-"recordCount"
-);
-
-recordCount.textContent =
-data.length +
-(
-data.length === 1
-? " record"
-: " records"
-);
-
-if (data.length === 0) {
-
-```
-tableBody.innerHTML = `
-  <tr>
-    <td colspan="7" class="loading">
-      No records found.
-    </td>
-  </tr>
-`;
-
-return;
-```
-
-}
-
-tableBody.innerHTML =
-data.map(
-function(record) {
-
-```
-    return `
-
-      <tr>
-
-        <td>
-          ${escapeHtml(record.name)}
-        </td>
-
-        <td>
-          ${escapeHtml(record.email)}
-        </td>
-
-        <td>
-          ${escapeHtml(record.phone)}
-        </td>
-
-        <td>
-          ${escapeHtml(record.status)}
-        </td>
-
-        <td>
-          ${escapeHtml(record.createdAt)}
-        </td>
-
-        <td>
-          ${escapeHtml(record.updatedAt || "")}
-        </td>
-
-        <td>
-
-          <button
-            class="btn-edit"
-            onclick="editRecord('${record.id}')"
-          >
-            Edit
-          </button>
-
-          <button
-            class="btn-delete"
-            onclick="deleteRecord('${record.id}')"
-          >
-            Delete
-          </button>
-
-        </td>
-
-      </tr>
-
-    `;
-
-  }
-).join("");
-```
-
-}
-
-# /*
-
-# CREATE / UPDATE FORM
-
-*/
-
-document
-.getElementById("recordForm")
-.addEventListener(
-"submit",
-async function(event) {
-
-```
-  event.preventDefault();
-
-
-  const data = {
-
-    id:
-      document.getElementById(
-        "recordId"
-      ).value,
-
-    name:
-      document.getElementById(
-        "name"
-      ).value.trim(),
-
-    email:
-      document.getElementById(
-        "email"
-      ).value.trim(),
-
-    phone:
-      document.getElementById(
-        "phone"
-      ).value.trim(),
-
-    status:
-      document.getElementById(
-        "status"
-      ).value
-
-  };
-
-
-  if (!data.name) {
-
-    showMessage(
-      "Name is required.",
-      "error"
+  const tableBody =
+    document.getElementById(
+      "tableBody"
     );
+
+  const recordCount =
+    document.getElementById(
+      "recordCount"
+    );
+
+
+  recordCount.textContent =
+    data.length +
+    (
+      data.length === 1
+        ? " record"
+        : " records"
+    );
+
+
+  if (data.length === 0) {
+
+    tableBody.innerHTML = `
+      <tr>
+        <td
+          colspan="7"
+          class="loading"
+        >
+          No records found.
+        </td>
+      </tr>
+    `;
 
     return;
 
   }
 
 
+  tableBody.innerHTML =
+    data.map(
+      record => `
+
+        <tr>
+
+          <td>
+            ${escapeHTML(record.name)}
+          </td>
+
+          <td>
+            ${escapeHTML(record.email)}
+          </td>
+
+          <td>
+            ${escapeHTML(record.phone)}
+          </td>
+
+          <td>
+            ${escapeHTML(record.status)}
+          </td>
+
+          <td>
+            ${escapeHTML(record.createdAt)}
+          </td>
+
+          <td>
+            ${escapeHTML(record.updatedAt)}
+          </td>
+
+          <td>
+
+            <button
+              class="btn-edit"
+              onclick="editRecord('${record.id}')"
+            >
+              Edit
+            </button>
+
+            <button
+              class="btn-delete"
+              onclick="deleteRecord('${record.id}')"
+            >
+              Delete
+            </button>
+
+          </td>
+
+        </tr>
+
+      `
+    ).join("");
+
+}
+
+
+/* =====================================
+   ADD / UPDATE RECORD
+===================================== */
+
+document
+  .getElementById("recordForm")
+  .addEventListener(
+    "submit",
+    async function(event) {
+
+      event.preventDefault();
+
+
+      const data = {
+
+        id:
+          document.getElementById(
+            "recordId"
+          ).value,
+
+        name:
+          document.getElementById(
+            "name"
+          ).value,
+
+        email:
+          document.getElementById(
+            "email"
+          ).value,
+
+        phone:
+          document.getElementById(
+            "phone"
+          ).value,
+
+        status:
+          document.getElementById(
+            "status"
+          ).value
+
+      };
+
+
+      const action =
+        editing
+          ? "updateRecord"
+          : "createRecord";
+
+
+      try {
+
+        const response =
+          await fetch(
+            API_URL,
+            {
+
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "text/plain;charset=utf-8"
+              },
+
+              body:
+                JSON.stringify({
+
+                  action:
+                    action,
+
+                  data:
+                    data
+
+                })
+
+            }
+          );
+
+
+        const result =
+          await response.json();
+
+
+        if (!result.success) {
+
+          throw new Error(
+            result.message
+          );
+
+        }
+
+
+        showMessage(
+          result.message,
+          "success"
+        );
+
+
+        resetForm();
+
+        await loadRecords();
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        showMessage(
+          error.message,
+          "error"
+        );
+
+      }
+
+    }
+  );
+
+
+/* =====================================
+   EDIT
+===================================== */
+
+function editRecord(id) {
+
+  const record =
+    records.find(
+      item =>
+        String(item.id) ===
+        String(id)
+    );
+
+
+  if (!record) {
+    return;
+  }
+
+
+  editing = true;
+
+
+  document.getElementById(
+    "recordId"
+  ).value =
+    record.id;
+
+
+  document.getElementById(
+    "name"
+  ).value =
+    record.name;
+
+
+  document.getElementById(
+    "email"
+  ).value =
+    record.email;
+
+
+  document.getElementById(
+    "phone"
+  ).value =
+    record.phone;
+
+
+  document.getElementById(
+    "status"
+  ).value =
+    record.status;
+
+
+  document.getElementById(
+    "formTitle"
+  ).textContent =
+    "Edit Record";
+
+
+  document.getElementById(
+    "submitButton"
+  ).textContent =
+    "Update Record";
+
+
+  window.scrollTo({
+
+    top: 0,
+
+    behavior: "smooth"
+
+  });
+
+}
+
+
+/* =====================================
+   DELETE
+===================================== */
+
+async function deleteRecord(id) {
+
+  const confirmed =
+    confirm(
+      "Are you sure you want to delete this record?"
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
   try {
-
-    let action =
-      editMode
-        ? "updateRecord"
-        : "createRecord";
-
 
     const response =
       await fetch(
@@ -284,13 +377,16 @@ async function(event) {
               "text/plain;charset=utf-8"
           },
 
-          body: JSON.stringify({
+          body:
+            JSON.stringify({
 
-            action: action,
+              action:
+                "deleteRecord",
 
-            data: data
+              id:
+                id
 
-          })
+            })
 
         }
       );
@@ -303,8 +399,7 @@ async function(event) {
     if (!result.success) {
 
       throw new Error(
-        result.message ||
-        "Operation failed."
+        result.message
       );
 
     }
@@ -314,9 +409,6 @@ async function(event) {
       result.message,
       "success"
     );
-
-
-    resetForm();
 
 
     await loadRecords();
@@ -335,388 +427,186 @@ async function(event) {
   }
 
 }
-```
 
-);
 
-# /*
-
-# EDIT RECORD
-
-*/
-
-function editRecord(id) {
-
-const record =
-records.find(
-function(item) {
-
-```
-    return String(item.id) ===
-      String(id);
-
-  }
-);
-```
-
-if (!record) {
-
-```
-showMessage(
-  "Record not found.",
-  "error"
-);
-
-return;
-```
-
-}
-
-editMode = true;
-
-document.getElementById(
-"recordId"
-).value =
-record.id;
-
-document.getElementById(
-"name"
-).value =
-record.name || "";
-
-document.getElementById(
-"email"
-).value =
-record.email || "";
-
-document.getElementById(
-"phone"
-).value =
-record.phone || "";
-
-document.getElementById(
-"status"
-).value =
-record.status || "Active";
-
-document.getElementById(
-"formTitle"
-).textContent =
-"Edit Record";
-
-document.getElementById(
-"submitButton"
-).textContent =
-"Update Record";
-
-window.scrollTo({
-
-```
-top: 0,
-
-behavior: "smooth"
-```
-
-});
-
-}
-
-# /*
-
-# DELETE RECORD
-
-*/
-
-async function deleteRecord(id) {
-
-const record =
-records.find(
-function(item) {
-
-```
-    return String(item.id) ===
-      String(id);
-
-  }
-);
-```
-
-if (!record) {
-
-```
-return;
-```
-
-}
-
-const confirmed =
-confirm(
-"Delete " +
-record.name +
-"?"
-);
-
-if (!confirmed) {
-
-```
-return;
-```
-
-}
-
-try {
-
-```
-const response =
-  await fetch(
-    API_URL,
-    {
-
-      method: "POST",
-
-      headers: {
-        "Content-Type":
-          "text/plain;charset=utf-8"
-      },
-
-      body: JSON.stringify({
-
-        action:
-          "deleteRecord",
-
-        id:
-          id
-
-      })
-
-    }
-  );
-
-
-const result =
-  await response.json();
-
-
-if (!result.success) {
-
-  throw new Error(
-    result.message ||
-    "Delete failed."
-  );
-
-}
-
-
-showMessage(
-  result.message,
-  "success"
-);
-
-
-await loadRecords();
-```
-
-}
-
-catch (error) {
-
-```
-console.error(error);
-
-showMessage(
-  error.message,
-  "error"
-);
-```
-
-}
-
-}
-
-# /*
-
-# RESET FORM
-
-*/
+/* =====================================
+   RESET FORM
+===================================== */
 
 function resetForm() {
 
-document
-.getElementById(
-"recordForm"
-)
-.reset();
+  document
+    .getElementById(
+      "recordForm"
+    )
+    .reset();
 
-document.getElementById(
-"recordId"
-).value = "";
 
-document.getElementById(
-"status"
-).value =
-"Active";
+  document.getElementById(
+    "recordId"
+  ).value = "";
 
-editMode = false;
 
-document.getElementById(
-"formTitle"
-).textContent =
-"Add Record";
+  document.getElementById(
+    "status"
+  ).value =
+    "Active";
 
-document.getElementById(
-"submitButton"
-).textContent =
-"Add Record";
+
+  editing = false;
+
+
+  document.getElementById(
+    "formTitle"
+  ).textContent =
+    "Add Record";
+
+
+  document.getElementById(
+    "submitButton"
+  ).textContent =
+    "Add Record";
 
 }
 
-# /*
 
-# SEARCH
+/* =====================================
+   SEARCH
+===================================== */
 
-*/
+document
+  .getElementById("search")
+  .addEventListener(
+    "input",
+    filterRecords
+  );
+
 
 function filterRecords() {
 
-const search =
-document.getElementById(
-"search"
-).value
-.toLowerCase()
-.trim();
+  const search =
+    document.getElementById(
+      "search"
+    ).value
+      .toLowerCase()
+      .trim();
 
-const filtered =
-records.filter(
-function(record) {
 
-```
-    return (
+  const filtered =
+    records.filter(
+      record =>
 
-      String(record.name)
-        .toLowerCase()
-        .includes(search)
+        record.name
+          .toLowerCase()
+          .includes(search)
 
-      ||
+        ||
 
-      String(record.email)
-        .toLowerCase()
-        .includes(search)
+        record.email
+          .toLowerCase()
+          .includes(search)
 
-      ||
+        ||
 
-      String(record.phone)
-        .toLowerCase()
-        .includes(search)
+        record.phone
+          .toLowerCase()
+          .includes(search)
 
-      ||
+        ||
 
-      String(record.status)
-        .toLowerCase()
-        .includes(search)
+        record.status
+          .toLowerCase()
+          .includes(search)
 
     );
 
-  }
-);
-```
 
-displayRecords(
-filtered
-);
+  displayRecords(
+    filtered
+  );
 
 }
 
-# /*
 
-# MESSAGE
-
-*/
+/* =====================================
+   MESSAGE
+===================================== */
 
 function showMessage(
-message,
-type
+  text,
+  type
 ) {
 
-const element =
-document.getElementById(
-"message"
-);
+  const message =
+    document.getElementById(
+      "message"
+    );
 
-element.textContent =
-message;
 
-element.className =
-"message " + type;
+  message.textContent =
+    text;
 
-setTimeout(
-function() {
 
-```
-  element.className =
-    "message";
+  message.className =
+    type;
 
-},
-4000
-```
 
-);
+  setTimeout(
+    function() {
 
-}
+      message.className =
+        "";
 
-# /*
-
-# SECURITY
-
-*/
-
-function escapeHtml(value) {
-
-return String(
-value || ""
-)
-
-```
-.replace(
-  /&/g,
-  "&amp;"
-)
-
-.replace(
-  /</g,
-  "&lt;"
-)
-
-.replace(
-  />/g,
-  "&gt;"
-)
-
-.replace(
-  /"/g,
-  "&quot;"
-)
-
-.replace(
-  /'/g,
-  "&#039;"
-);
-```
+    },
+    4000
+  );
 
 }
 
-# /*
 
-# START APPLICATION
+/* =====================================
+   ESCAPE HTML
+===================================== */
 
-*/
+function escapeHTML(value) {
+
+  return String(
+    value || ""
+  )
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+/* =====================================
+   START APP
+===================================== */
 
 document.addEventListener(
-"DOMContentLoaded",
-function() {
-
-```
-loadRecords();
-```
-
-}
+  "DOMContentLoaded",
+  loadRecords
 );
