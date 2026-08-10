@@ -1,5 +1,5 @@
 const API_URL =
-  "YOUR_APPS_SCRIPT_URL";
+  "https://script.google.com/macros/s/AKfycby35bdDkDAkNxj0oUNxH4nFjGzXDo3b30kSWAh_YTzClma58Eek-1JwUWC_oIKJC6NtEA/exec";
 
 
 let records = [];
