@@ -5,7 +5,7 @@
 */
 
 const API_URL =
-"https://script.google.com/macros/s/AKfycbwteS3MTFduPotMBbxFcOE2QNtIs5ReDEpWQrdiB6EbZXGcuULxGGs9K9GhxEdRpA41oA/exec";
+"https://script.google.com/macros/s/AKfycbxwkmXBoS1BJLqQwB3M1GvjjW9Dmc2JEGyK2PqFc1_NmJZ3b2N_9isAC7AKo9V7D5DWmw/exec";
 
 # /*
 
